@@ -1,12 +1,17 @@
-FROM python:3.12-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir aiogram httpx
+COPY package.json .
+RUN npm install
 
-COPY bot.py .
+COPY . .
+RUN npm run build
 
-CMD ["python", "bot.py"]
+FROM nginx:alpine
+
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
